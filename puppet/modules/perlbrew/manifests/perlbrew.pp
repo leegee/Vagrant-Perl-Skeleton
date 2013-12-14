@@ -17,13 +17,16 @@ class perlbrew::install {
         #logoutput => true,
     }
 
-    # FIXME this at least, should only happen once
     exec { 'add perlbrew to $PATH':
-        path => '/bin/',
-        command => 'echo "source ~/perl5/perlbrew/etc/bashrc" >> /home/vagrant/.bashrc',
+        # I had to extend the path for 'full' bash
+        path => '/bin/:/usr/bin/',
+        # Load the 'vagrant' user's .bashrc and stop this exec if it contains the string
+        # that will otherwise be added (the sourcing of perlbrew's bashrc).
+		unless => "bash -c 'slrpd=$(</home/vagrant/.bashrc); expr 0 == $( expr \"$slrpd\" : \".*/home/vagrant/perl5/perlbrew/etc/bashrc\" )' ",
+		command => 'echo "source /home/vagrant/perl5/perlbrew/etc/bashrc" >> /home/vagrant/.bashrc',
         user => 'vagrant',
         cwd => '/home/vagrant',
-        #logoutput => true,
+        logoutput => true,
         before => Exec['perlbrew init'],
     }
 
